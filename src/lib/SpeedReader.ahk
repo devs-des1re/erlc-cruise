@@ -12,7 +12,9 @@ class SpeedReader {
     LastSpeed := -1        ; smoothed speed, -1 until first read
     Accel := 0.0           ; mph/s estimate
     LastReadTick := 0
+    LastDt := 0.0          ; seconds between the last two accepted readings
     BadReads := 0
+    Raw := ""              ; last OCR text (or reason) for logging/HUD
 
     ; Reads the configured region once. Returns:
     ;   {Speed, Raw, Error}  - Speed >= 0 on success, -1 on failure.
@@ -79,6 +81,7 @@ class SpeedReader {
         }
         this.BadReads := 0
         dt := (now - this.LastReadTick) / 1000
+        this.LastDt := dt
 
         if (this.LastSpeed < 0 || dt > 1.5) {
             this.LastSpeed := rawSpeed
@@ -102,7 +105,9 @@ class SpeedReader {
     Reset(speed := -1) {
         this.LastSpeed := speed
         this.Accel := 0
+        this.LastDt := 0
         this.BadReads := 0
+        this.Raw := ""
         this.LastReadTick := (speed >= 0) ? A_TickCount : 0
     }
 

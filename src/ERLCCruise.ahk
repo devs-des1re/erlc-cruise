@@ -38,9 +38,11 @@ Persistent
 #Include %A_ScriptDir%\lib\InputDriver.ahk
 #Include %A_ScriptDir%\lib\Controller.ahk
 #Include %A_ScriptDir%\lib\SpeedReader.ahk
+#Include %A_ScriptDir%\lib\GameWindow.ahk
+#Include %A_ScriptDir%\lib\CruiseEngine.ahk
 
 ; --- startup -----------------------------------------------------------------
-; Later phases add the engine, HUD, region selector, and the WebView2 UI here.
+; Later phases add the HUD, region selector, and the WebView2 UI here.
 
 Paths.EnsureDataDirs()
 Config.Load()
@@ -48,6 +50,11 @@ Logger.Install()
 Logger.Enabled := Config.GetBool("Settings", "Logging")
 Logger.Info("ERLC Cruise Control started (" AppVersion ").")
 Logger.Info("Data folder: " Paths.AppDataDir)
+
+Engine := CruiseEngine()
+Engine.Input.InstallExitRelease()
+Engine.StartTimers()
+Logger.Info("Engine initialised.")
 
 ; --- tray --------------------------------------------------------------------
 A_IconTip := "ERLC Cruise Control"
