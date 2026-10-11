@@ -21,6 +21,9 @@ Persistent
 ;@Ahk2Exe-AddResource %A_ScriptDir%\..\ui\index.html, INDEX.HTML
 ;@Ahk2Exe-AddResource %A_ScriptDir%\..\ui\style.css, STYLE.CSS
 ;@Ahk2Exe-AddResource %A_ScriptDir%\..\ui\app.js, APP.JS
+;@Ahk2Exe-AddResource %A_ScriptDir%\..\ui\hud.html, HUD.HTML
+;@Ahk2Exe-AddResource %A_ScriptDir%\..\ui\hud.css, HUD.CSS
+;@Ahk2Exe-AddResource %A_ScriptDir%\..\ui\hud.js, HUD.JS
 ;@Ahk2Exe-AddResource %A_ScriptDir%\..\ui\icon.png, ICON.PNG
 ;@Ahk2Exe-AddResource %A_ScriptDir%\..\ui\fonts\Outfit-Light.ttf, FONTS\OUTFIT-LIGHT.TTF
 ;@Ahk2Exe-AddResource %A_ScriptDir%\..\ui\fonts\Outfit-Regular.ttf, FONTS\OUTFIT-REGULAR.TTF
