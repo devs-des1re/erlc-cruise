@@ -8,6 +8,7 @@
 
 class Config {
     static Ini := Paths.ConfigFile
+    static MaxTargetSpeed := 300
 
     static Defaults := Map(
         "General", Map(
