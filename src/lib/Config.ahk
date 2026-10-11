@@ -43,10 +43,16 @@ class Config {
         "Hud", Map(
             "X", 20,
             "Y", 20,
-            "Width", 324,
-            "Opacity", 225,
+            "Width", 300,
+            "Opacity", 235,
             "Visible", 1,
-            "ClickThrough", 0
+            "ClickThrough", 0,
+            "ShowTarget", 1,
+            "ShowSpeed", 1,
+            "ShowThrottle", 1,
+            "ShowBrake", 1,
+            "ShowAccel", 1,
+            "ShowAction", 1
         ),
         "Region", Map(
             "X", 0,

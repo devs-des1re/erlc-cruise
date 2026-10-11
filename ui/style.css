@@ -278,6 +278,57 @@ body {
     font-size: 12.5px;
 }
 
+/* HUD field toggles (label + checkbox in a row) */
+.field-item:has(.checkbox) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 9px 12px;
+}
+
+.field-item:has(.checkbox) .field-label {
+    color: var(--text);
+}
+
+.checkbox {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    border: 1px solid var(--border-strong);
+    background: var(--elev);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    transition: background 0.12s, border-color 0.12s;
+}
+
+.checkbox::after {
+    content: "";
+    width: 9px;
+    height: 5px;
+    border-left: 2px solid var(--bg);
+    border-bottom: 2px solid var(--bg);
+    transform: rotate(-45deg) translateY(-1px);
+    opacity: 0;
+}
+
+.checkbox:checked {
+    background: var(--text);
+    border-color: var(--text);
+}
+
+.checkbox:checked::after { opacity: 1; }
+
+.checkbox:focus-visible {
+    outline: 2px solid var(--border-strong);
+    outline-offset: 2px;
+}
+
 /* Toggle switch */
 .switch {
     display: flex;

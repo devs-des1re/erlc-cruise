@@ -40,10 +40,10 @@ Persistent
 #Include %A_ScriptDir%\lib\SpeedReader.ahk
 #Include %A_ScriptDir%\lib\GameWindow.ahk
 #Include %A_ScriptDir%\lib\CruiseEngine.ahk
-#Include %A_ScriptDir%\lib\Hud.ahk
 #Include %A_ScriptDir%\lib\RegionSelector.ahk
 #Include %A_ScriptDir%\..\vendor\JSON.ahk
 #Include %A_ScriptDir%\..\vendor\webview\WebViewToo.ahk
+#Include %A_ScriptDir%\lib\Hud.ahk
 #Include %A_ScriptDir%\lib\Ui.ahk
 
 ; --- hotkey management -------------------------------------------------------
@@ -190,18 +190,26 @@ Hotkeys.Register()
 if !Config.HasRegion()
     App.Notify("ERLC Cruise Control", "No speed region set. Use the region hotkey to pick one.")
 
+; Show the settings window and the HUD on launch. Closing either window hides
+; it to the tray; the app keeps running.
+try {
+    Ui.Open()
+    Logger.Info("Settings window shown.")
+} catch as e {
+    Logger.Exception(e, "Open settings on startup")
+    App.Notify("ERLC Cruise Control", "Could not open the settings window: " e.Message)
+}
+gHud.SetVisible(true)
+
 ; --- tray --------------------------------------------------------------------
 A_IconTip := "ERLC Cruise Control"
 if (Paths.IconFile != "" && FileExist(Paths.IconFile))
     TraySetIcon(Paths.IconFile)
 Tray := A_TrayMenu
 Tray.Delete()
-Tray.Add("Select Region", (*) => App.SelectRegion())
+Tray.Add("Open GUI", (*) => App.OpenSettings())
 Tray.Add("Toggle HUD", (*) => App.ToggleHud())
-Tray.Add("Settings", (*) => App.OpenSettings())
 Tray.Add()
-Tray.Add("Open Data Folder", (*) => App.OpenDataFolder())
-Tray.Add("Open Logs", (*) => App.OpenLogs())
-Tray.Add()
-Tray.Add("Close App", (*) => App.Quit())
-Tray.Default := "Select Region"
+Tray.Add("Quit", (*) => App.Quit())
+Tray.Default := "Open GUI"
+Tray.ClickCount := 1  ; single left-click opens the settings window

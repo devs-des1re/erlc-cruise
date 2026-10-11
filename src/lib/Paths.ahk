@@ -14,8 +14,9 @@ class Paths {
     static LoaderFile := Paths.FindLoaderFile()
 
     ; WebView2 user-data folders. Each WebView window in a process needs its
-    ; own folder, so the main window and any popups use separate ones.
-    static WebViewDataDir := Paths.AppDataDir "\webview"
+    ; own folder, so the settings window and the HUD use separate ones.
+    static WebViewDataDir    := Paths.AppDataDir "\webview"
+    static WebViewHudDataDir := Paths.AppDataDir "\webview-hud"
 
     ; Locate icon.ico whether running from source (src/lib) or installed next
     ; to the exe. Returns a normalized absolute path (no "..") since Windows'
@@ -62,7 +63,7 @@ class Paths {
     }
 
     static EnsureDataDirs() {
-        dirs := [this.AppDataDir, this.LogsDir, this.CapturesDir, this.WebViewDataDir]
+        dirs := [this.AppDataDir, this.LogsDir, this.CapturesDir, this.WebViewDataDir, this.WebViewHudDataDir]
         for dir in dirs {
             if !DirExist(dir)
                 DirCreate(dir)

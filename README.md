@@ -24,11 +24,28 @@ control for ERLC.
 ## Running
 
 1. Install AutoHotkey v2.
-2. Run `src/ERLCCruise.ahk`.
+2. Run `src/ERLCCruise.ahk`. The settings window and the HUD both open on
+   launch.
 3. On first run, pick a region over your speedometer using the region selector.
+4. Press the toggle hotkey (default `F6`) to enable cruise.
+
+The app lives in the system tray. Its menu has three items: **Open GUI**,
+**Toggle HUD**, and **Quit**. Closing the settings window (or the HUD) hides it
+to the tray and the app keeps running; left-click the tray icon to bring the
+settings window back.
 
 Hotkeys only fire while the game window is focused, so typing anywhere else
 never triggers a capture.
+
+## HUD
+
+- Rendered with the same HTML/CSS engine and palette as the settings window, so
+  it matches exactly: dark surface, Outfit font, rounded corners, and smooth
+  rounded throttle/brake bars.
+- Shows target, speed, throttle, brake, acceleration, and the current action.
+- Drag it anywhere on screen (when click-through is off); the position is saved.
+- Every field can be toggled on or off in the **HUD** tab, and its width,
+  opacity, and click-through can be set there too.
 
 ## License
 

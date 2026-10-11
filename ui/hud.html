@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ERLC Cruise Control HUD</title>
+    <link rel="stylesheet" href="hud.css">
+</head>
+<body>
+    <div class="hud">
+        <div class="hud-head">
+            <span class="hud-title">ERLC CRUISE CONTROL</span>
+            <span class="hud-dot" id="dot"></span>
+        </div>
+
+        <div class="hud-status" id="status">CRUISE OFF</div>
+
+        <div class="hud-reads">
+            <div class="read" id="target-block">
+                <div class="read-label">TARGET</div>
+                <div class="read-value accent" id="target">40</div>
+            </div>
+            <div class="read" id="speed-block">
+                <div class="read-label">SPEED</div>
+                <div class="read-value" id="speed">--</div>
+            </div>
+        </div>
+
+        <div class="meter" id="throttle-block">
+            <div class="meter-head"><span>THROTTLE</span><span id="throttle-pct">0%</span></div>
+            <div class="meter-track"><div class="meter-fill green" id="throttle-fill"></div></div>
+        </div>
+
+        <div class="meter" id="brake-block">
+            <div class="meter-head"><span>BRAKE</span><span id="brake-pct">0%</span></div>
+            <div class="meter-track"><div class="meter-fill red" id="brake-fill"></div></div>
+        </div>
+
+        <div class="hud-accel" id="accel-block">ACCEL  +0.0 mph/s</div>
+        <div class="hud-action" id="action-block">Ready</div>
+    </div>
+
+    <script src="hud.js"></script>
+</body>
+</html>

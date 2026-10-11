@@ -124,7 +124,13 @@ class Ui {
                 Width: Config.GetInt("Hud", "Width"),
                 Opacity: Config.GetInt("Hud", "Opacity"),
                 Visible: Config.GetBool("Hud", "Visible"),
-                ClickThrough: Config.GetBool("Hud", "ClickThrough")
+                ClickThrough: Config.GetBool("Hud", "ClickThrough"),
+                ShowTarget: Config.GetBool("Hud", "ShowTarget"),
+                ShowSpeed: Config.GetBool("Hud", "ShowSpeed"),
+                ShowThrottle: Config.GetBool("Hud", "ShowThrottle"),
+                ShowBrake: Config.GetBool("Hud", "ShowBrake"),
+                ShowAccel: Config.GetBool("Hud", "ShowAccel"),
+                ShowAction: Config.GetBool("Hud", "ShowAction")
             },
             ocr: {
                 Language: Config.Get("Ocr", "Language"),
@@ -219,10 +225,16 @@ class Ui {
             ; HUD
             Config.Set("Hud", "X", this.ToInt(state.hud.X, 20))
             Config.Set("Hud", "Y", this.ToInt(state.hud.Y, 20))
-            Config.Set("Hud", "Width", Max(200, this.ToInt(state.hud.Width, 324)))
-            Config.Set("Hud", "Opacity", Min(255, Max(30, this.ToInt(state.hud.Opacity, 225))))
+            Config.Set("Hud", "Width", Max(200, this.ToInt(state.hud.Width, 300)))
+            Config.Set("Hud", "Opacity", Min(255, Max(30, this.ToInt(state.hud.Opacity, 235))))
             Config.Set("Hud", "Visible", state.hud.Visible ? 1 : 0)
             Config.Set("Hud", "ClickThrough", state.hud.ClickThrough ? 1 : 0)
+            Config.Set("Hud", "ShowTarget", state.hud.ShowTarget ? 1 : 0)
+            Config.Set("Hud", "ShowSpeed", state.hud.ShowSpeed ? 1 : 0)
+            Config.Set("Hud", "ShowThrottle", state.hud.ShowThrottle ? 1 : 0)
+            Config.Set("Hud", "ShowBrake", state.hud.ShowBrake ? 1 : 0)
+            Config.Set("Hud", "ShowAccel", state.hud.ShowAccel ? 1 : 0)
+            Config.Set("Hud", "ShowAction", state.hud.ShowAction ? 1 : 0)
 
             ; OCR
             Config.Set("Ocr", "Language", Trim(state.ocr.Language) != "" ? Trim(state.ocr.Language) : "en-us")

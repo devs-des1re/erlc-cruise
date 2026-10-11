@@ -1,98 +1,149 @@
 ; ---------------------------------------------------------------------------
-; Hud.ahk - the always-on-top status overlay.
+; Hud.ahk - the always-on-top status overlay (WebView2).
 ;
-; A frameless, click-through overlay showing cruise state, target, speed,
-; throttle, brake, and acceleration. Position, width, opacity, and visibility
-; come from Config and can be changed live.
+; Renders the HUD with real HTML/CSS (ui\hud.html + hud.css) so it matches the
+; settings window exactly: black surface, Outfit font, rounded corners, and
+; smooth rounded throttle/brake bars. Position, width, opacity, visible,
+; click-through, and which fields are shown all come from Config.
 ;
-; Port of the prototype's HUD, rebuilt as a class driven by a status snapshot.
+; The overlay is drag-movable via CSS (-webkit-app-region: drag). The new
+; position is detected and saved back to Config.
 ; ---------------------------------------------------------------------------
 
 class Hud {
     Gui := ""
-    Colors := Map()
-    Visible := true
+    Visible := false
     ClickThrough := false
+    Width := 300
+    Ready := false
 
     __New() {
         this.Build()
-        this.ApplyConfig()
+        this.ApplyConfig(false)  ; position it but stay hidden until shown
     }
 
     Build() {
-        this.Colors := Map()
-        opt := "+AlwaysOnTop -Caption +ToolWindow +Border"
-        if Config.GetBool("Hud", "ClickThrough")
-            opt .= " +E0x20"
+        ; Destroy any previous overlay (e.g. when rebuilding for a click-through change).
+        if (this.Gui != "" && this.Gui.Hwnd) {
+            try this.Gui.Destroy()
+        }
+
         this.ClickThrough := Config.GetBool("Hud", "ClickThrough")
+        this.Width := Max(200, Config.GetInt("Hud", "Width"))
 
-        g := Gui(opt)
-        g.BackColor := "141414"
-        g.MarginX := 12
-        g.MarginY := 8
+        opt := "+AlwaysOnTop -Caption -Resize +ToolWindow"
+        if this.ClickThrough
+            opt .= " +E0x20"        ; WS_EX_TRANSPARENT
 
-        g.SetFont("s9 bold c6E6E6E", "Segoe UI")
-        this.TitleTxt := g.Add("Text", "w300", "ERLC CRUISE CONTROL")
+        settings := { DataDir: Paths.WebViewHudDataDir, DefaultWidth: this.Width, DefaultHeight: 240 }
+        if (A_IsCompiled) {
+            WebViewCtrl.CreateFileFromResource((A_PtrSize * 8) "bit\WebView2Loader.dll", WebViewCtrl.TempDir)
+            settings.DllPath := WebViewCtrl.TempDir "\" (A_PtrSize * 8) "bit\WebView2Loader.dll"
+        } else {
+            settings.DllPath := Paths.LoaderFile
+        }
 
-        g.SetFont("s16 bold cWhite", "Segoe UI")
-        this.StatusTxt := g.Add("Text", "w300 h30", "CRUISE OFF")
+        g := WebViewGui(opt, "ERLC Cruise Control HUD",, settings)
+        this.Gui := g
+        this.Ready := false
 
-        g.SetFont("s9 c8A8A8A", "Segoe UI")
-        g.Add("Text", "w145 Section", "TARGET")
-        g.Add("Text", "x+10 yp w145", "SPEED")
+        g.DefaultBackgroundColor := "0A0A0A"
 
-        g.SetFont("s24 bold c00E5FF", "Segoe UI")
-        this.TargetTxt := g.Add("Text", "xs w145 h44", "--")
-        g.SetFont("s24 bold cWhite", "Segoe UI")
-        this.SpeedTxt := g.Add("Text", "x+10 yp w145 h44", "--")
+        ; Register before navigating so the load event is never missed.
+        g.NavigationCompleted((*) => this.OnReady())
+        ; The page reports its content height so the window fits exactly.
+        g.AddCallbackToScript("Resize", (wv, height) => this.OnResize(height))
 
-        g.SetFont("s9 c8A8A8A", "Segoe UI")
-        this.ThrottleTxt := g.Add("Text", "xs w300", "THROTTLE")
-        this.Bar := g.Add("Progress", "xs w300 h14 -Theme Range0-100 c00E676 Background333333", 0)
-
-        this.BrakeTxt := g.Add("Text", "xs w300", "BRAKE")
-        this.BrakeBar := g.Add("Progress", "xs w300 h14 -Theme Range0-100 cFF5252 Background333333", 0)
-
-        this.AccelTxt := g.Add("Text", "xs w300", "")
-
-        g.SetFont("s10 cWhite", "Segoe UI")
-        this.ActionTxt := g.Add("Text", "xs w300 h22 +0x80", "")
-
-        g.SetFont("s9 c9E9E9E", "Consolas")
-        this.OcrTxt := g.Add("Text", "xs w300 h34 +0x80", "")
+        if !A_IsCompiled
+            g.BrowseFolder(Paths.UiDir)
+        g.Navigate("hud.html")
 
         g.OnEvent("Close", (*) => this.Hide())
-        this.Gui := g
+    }
+
+    ; Called once the HUD page has loaded.
+    OnReady() {
+        this.Ready := true
+        this.PushConfig()
+        ; Persist the position whenever the user drags the overlay.
+        if !this.HasOwnProp("WatchFn") {
+            this.WatchFn := this.WatchPosition.Bind(this)
+            SetTimer(this.WatchFn, 250)
+        }
+    }
+
+    ; The page reports its rendered content height; resize the window to fit.
+    OnResize(height) {
+        if (this.Gui = "" || !this.Gui.Hwnd)
+            return
+        h := Max(80, height + 0)
+        x := Config.GetInt("Hud", "X")
+        y := Config.GetInt("Hud", "Y")
+        try this.Gui.Move(x, y, this.Width, h)
+    }
+
+    ; Detects drag repositioning (WebView2 drags the window natively) and saves it.
+    WatchPosition() {
+        if !this.Visible || (this.Gui = "" || !this.Gui.Hwnd)
+            return
+        try {
+            WinGetPos(&x, &y, , , "ahk_id " this.Gui.Hwnd)
+        } catch {
+            return
+        }
+        if (x != Config.GetInt("Hud", "X") || y != Config.GetInt("Hud", "Y")) {
+            Config.Set("Hud", "X", x)
+            Config.Set("Hud", "Y", y)
+            Logger.Action(Format("HUD moved to {1},{2}.", x, y))
+        }
     }
 
     Show() {
+        if (this.Gui = "" || !this.Gui.Hwnd)
+            this.Build()
         x := Config.GetInt("Hud", "X")
         y := Config.GetInt("Hud", "Y")
-        this.Gui.Show(Format("x{} y{} NoActivate", x, y))
+        this.Gui.Show(Format("x{} y{} w{} NoActivate", x, y, this.Width))
         this.Gui.Opt("+LastFound")
         try WinSetTransparent(Config.GetInt("Hud", "Opacity"), this.Gui.Hwnd)
         this.Visible := true
+        this.PushConfig()
     }
 
     Hide() {
-        this.Gui.Hide()
+        try this.Gui.Hide()
         this.Visible := false
     }
 
-    ; Applies position, width, opacity, visibility, and click-through from Config.
-    ApplyConfig() {
-        this.Gui.Move(Config.GetInt("Hud", "X"), Config.GetInt("Hud", "Y"), Config.GetInt("Hud", "Width"))
-        if Config.GetBool("Hud", "Visible")
+    ; Applies position, width, opacity, visibility, click-through, and field
+    ; visibility from Config. Rebuilds when the click-through style changed
+    ; (WS_EX_TRANSPARENT cannot be toggled on a live window).
+    ApplyConfig(showHud := true) {
+        if (Config.GetBool("Hud", "ClickThrough") != this.ClickThrough)
+            this.Build()
+
+        this.Width := Max(200, Config.GetInt("Hud", "Width"))
+        if (this.Gui != "" && this.Gui.Hwnd) {
+            this.Gui.Move(Config.GetInt("Hud", "X"), Config.GetInt("Hud", "Y"), this.Width)
+            if (this.Visible)
+                try WinSetTransparent(Config.GetInt("Hud", "Opacity"), this.Gui.Hwnd)
+        }
+
+        if (showHud && Config.GetBool("Hud", "Visible"))
             this.Show()
         else
             this.Hide()
+
+        this.PushConfig()
     }
 
     SetOpacity(value) {
         value := Min(255, Max(30, value))
         Config.Set("Hud", "Opacity", value)
-        this.Gui.Opt("+LastFound")
-        try WinSetTransparent(value, this.Gui.Hwnd)
+        if (this.Gui != "" && this.Gui.Hwnd) {
+            this.Gui.Opt("+LastFound")
+            try WinSetTransparent(value, this.Gui.Hwnd)
+        }
     }
 
     SetVisible(visible) {
@@ -108,78 +159,52 @@ class Hud {
         Logger.Action("HUD " (this.Visible ? "shown" : "hidden") ".")
     }
 
-    ; Enables/disables click-through. WS_EX_TRANSPARENT cannot be toggled
-    ; cleanly on a live window, so the overlay is rebuilt with the flag set.
     SetClickThrough(on) {
-        on := !!on
         Config.Set("Hud", "ClickThrough", on ? 1 : 0)
-        if (this.ClickThrough = on)
-            return
-        this.Build()
         this.ApplyConfig()
         Logger.Action("HUD click-through " (on ? "on" : "off") ".")
     }
 
     SetPosition(x, y) {
-        this.Gui.Move(x, y)
+        if (this.Gui != "" && this.Gui.Hwnd)
+            this.Gui.Move(x, y)
         Config.Set("Hud", "X", x)
         Config.Set("Hud", "Y", y)
     }
 
     ; --- rendering ----------------------------------------------------------
 
-    ; Reads the engine's status snapshot and repaints.
+    ; Pushes the engine's status snapshot to the page.
     Update(engine) {
+        if (!this.Ready || this.Gui = "" || !this.Gui.Hwnd)
+            return
         st := engine.Status
-
-        if st.debug
-            this.Paint(this.StatusTxt, "DEBUG  (no keys pressed)", "FFD740")
-        else if st.active
-            this.Paint(this.StatusTxt, "CRUISE ON", "00E676")
-        else
-            this.Paint(this.StatusTxt, "CRUISE OFF", "FF5252")
-
-        this.Paint(this.TargetTxt, st.target, "00E5FF")
-
-        if (st.speed < 0) {
-            this.Paint(this.SpeedTxt, "--", "9E9E9E")
-        } else {
-            diff := Abs(st.target - st.speed)
-            col := !st.active ? "FFFFFF" : diff <= 2 ? "00E676" : diff <= 6 ? "FFD740" : "FF9100"
-            this.Paint(this.SpeedTxt, Round(st.speed), col)
-        }
-
-        pct := Round(st.duty * 100)
-        this.Paint(this.ThrottleTxt, "THROTTLE  " pct "%", "8A8A8A")
-        if (this.Bar.Value != pct)
-            this.Bar.Value := pct
-
-        bpct := Round(st.brakeDuty * 100)
-        this.Paint(this.BrakeTxt, "BRAKE  " bpct "%", bpct > 0 ? "FF5252" : "8A8A8A")
-        if (this.BrakeBar.Value != bpct)
-            this.BrakeBar.Value := bpct
-
-        sign := st.accel >= 0 ? "+" : ""
-        this.Paint(this.AccelTxt, "ACCEL  " sign Round(st.accel, 1) " mph/s", "8A8A8A")
-        this.Paint(this.ActionTxt, st.action, "FFFFFF")
-
-        note := st.note
-        if (note = "") {
-            this.Paint(this.OcrTxt, "", "9E9E9E")
-        } else {
-            n := StrReplace(note, "`n", " ")
-            col := RegExMatch(n, "i)^(error|region|\(empty|no |can't|ignored)") ? "FF5252" : "9E9E9E"
-            this.Paint(this.OcrTxt, "OCR: " n, col)
-        }
+        payload := JSON.stringify({type: "state", state: {
+            active: st.active,
+            debug: st.debug,
+            target: st.target,
+            speed: st.speed,
+            accel: st.accel,
+            duty: st.duty,
+            brakeDuty: st.brakeDuty,
+            action: st.action
+        }})
+        try this.Gui.PostWebMessageAsJson(payload)
     }
 
-    Paint(ctrl, text, color := "") {
-        text := String(text)
-        if (ctrl.Value != text)
-            ctrl.Value := text
-        if (color != "" && (!this.Colors.Has(ctrl) || this.Colors[ctrl] != color)) {
-            this.Colors[ctrl] := color
-            ctrl.SetFont("c" color)
+    ; Pushes which fields should be visible (from Config).
+    PushConfig() {
+        if (!this.Ready || this.Gui = "" || !this.Gui.Hwnd)
+            return
+        fields := {
+            ShowTarget: Config.GetBool("Hud", "ShowTarget"),
+            ShowSpeed: Config.GetBool("Hud", "ShowSpeed"),
+            ShowThrottle: Config.GetBool("Hud", "ShowThrottle"),
+            ShowBrake: Config.GetBool("Hud", "ShowBrake"),
+            ShowAccel: Config.GetBool("Hud", "ShowAccel"),
+            ShowAction: Config.GetBool("Hud", "ShowAction")
         }
+        payload := JSON.stringify({type: "config", fields: fields})
+        try this.Gui.PostWebMessageAsJson(payload)
     }
 }

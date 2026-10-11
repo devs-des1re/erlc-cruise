@@ -22,7 +22,10 @@ const mockState = {
         BrakeSoftGap: 4, BrakeHardGap: 8, BrakeAccelThreshold: 2.0,
         BrakeReleaseGap: 1.5, BrakeLookahead: 0.6, MinBrakeHold: 500, MinBrakeSpeed: 8,
     },
-    hud: { X: 20, Y: 20, Width: 324, Opacity: 225, Visible: true, ClickThrough: false },
+    hud: {
+        X: 20, Y: 20, Width: 300, Opacity: 235, Visible: true, ClickThrough: false,
+        ShowTarget: true, ShowSpeed: true, ShowThrottle: true, ShowBrake: true, ShowAccel: true, ShowAction: true,
+    },
     ocr: { Language: "en-us", Scale: 3, Grayscale: false, InvertColors: false, Monochrome: 0 },
     region: { x: 0, y: 0, w: 0, h: 0, set: false },
     debug: { version: "v0.0.0", os: "Windows", ahk: "v2.0", webview2: "-", game: "not found", region: "not set", logging: "on", dataDir: "" },
@@ -193,6 +196,15 @@ const HUD_FIELDS = [
     ["Opacity", "Opacity (30-255)", 5],
 ];
 
+const HUD_TOGGLES = [
+    ["ShowTarget", "Target"],
+    ["ShowSpeed", "Speed"],
+    ["ShowThrottle", "Throttle"],
+    ["ShowBrake", "Brake"],
+    ["ShowAccel", "Acceleration"],
+    ["ShowAction", "Status / action"],
+];
+
 const OCR_FIELDS = [
     ["Language", "Language (e.g. en-us)", null],
     ["Scale", "Scale", 1],
@@ -244,6 +256,25 @@ function renderGrid(gridId, fields, source) {
     fields.forEach(([key, label, step]) => grid.appendChild(fieldInput(key, label, source[key], step)));
 }
 
+function renderHudToggles(hud) {
+    const grid = document.getElementById("hud-fields");
+    grid.innerHTML = "";
+    HUD_TOGGLES.forEach(([key, label]) => {
+        const wrap = document.createElement("label");
+        wrap.className = "field-item";
+        const lab = document.createElement("span");
+        lab.className = "field-label";
+        lab.textContent = label;
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.id = "hudf-" + key;
+        input.checked = !!hud[key];
+        input.className = "checkbox";
+        wrap.append(lab, input);
+        grid.appendChild(wrap);
+    });
+}
+
 // ---------------------------------------------------------------------------
 // Tabs
 // ---------------------------------------------------------------------------
@@ -285,6 +316,7 @@ function render(state) {
     // HUD
     document.getElementById("hudVisible").checked = !!state.hud.Visible;
     document.getElementById("hudClickThrough").checked = !!state.hud.ClickThrough;
+    renderHudToggles(state.hud);
     renderGrid("hud-grid", HUD_FIELDS, state.hud);
 
     // OCR
@@ -346,6 +378,15 @@ function collectGrid(gridId) {
     return out;
 }
 
+function collectHudToggles() {
+    const out = {};
+    HUD_TOGGLES.forEach(([key]) => {
+        const el = document.getElementById("hudf-" + key);
+        out[key] = el ? el.checked : false;
+    });
+    return out;
+}
+
 function collect() {
     const hotkeys = {};
     document.querySelectorAll("#hk-grid [data-hotkey]").forEach((el) => {
@@ -368,6 +409,7 @@ function collect() {
         controller: Object.assign({}, collectGrid("pid-grid"), collectGrid("gap-grid"), collectGrid("brake-grid")),
         hud: Object.assign(
             { Visible: document.getElementById("hudVisible").checked, ClickThrough: document.getElementById("hudClickThrough").checked },
+            collectHudToggles(),
             collectGrid("hud-grid")
         ),
         ocr: Object.assign(
