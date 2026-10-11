@@ -12,7 +12,7 @@ const isHost = !!(window.chrome && window.chrome.webview && typeof ahk !== "unde
 
 const mockState = {
     general: { startTarget: 40, increment: 5, updateInterval: 100, lockOnToggle: false },
-    settings: { onlyFocused: true, logging: true, gameProcess: "RobloxPlayerBeta.exe" },
+    settings: { logging: true, gameProcess: "RobloxPlayerBeta.exe" },
     hotkeys: {
         Region: "F5", Toggle: "F6", IncrementUp: "F7", IncrementDown: "F8",
         Debug: "F9", Cancel: "~s", Settings: "F10", ToggleHud: "F11",
@@ -301,7 +301,6 @@ function render(state) {
     document.getElementById("lockOnToggle").checked = !!state.general.lockOnToggle;
 
     // Settings
-    document.getElementById("onlyFocused").checked = !!state.settings.onlyFocused;
     document.getElementById("logging").checked = !!state.settings.logging;
     document.getElementById("gameProcess").value = state.settings.gameProcess || "";
 
@@ -401,7 +400,6 @@ function collect() {
             lockOnToggle: document.getElementById("lockOnToggle").checked,
         },
         settings: {
-            onlyFocused: document.getElementById("onlyFocused").checked,
             logging: document.getElementById("logging").checked,
             gameProcess: num("gameProcess"),
         },

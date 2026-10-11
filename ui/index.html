@@ -64,15 +64,8 @@
                     </label>
                 </div>
                 <div class="card">
-                    <label class="switch">
-                        <input type="checkbox" id="onlyFocused">
-                        <span class="switch-track"><span class="switch-thumb"></span></span>
-                        <span class="switch-label">Cruise hotkeys only when the game is focused</span>
-                    </label>
-                </div>
-                <div class="card">
                     <label class="card-title" for="gameProcess">Game process</label>
-                    <p class="hint">Used to scope hotkeys and detect focus. Default: <code>RobloxPlayerBeta.exe</code></p>
+                    <p class="hint">Hotkeys work only while this process is focused. Default: <code>RobloxPlayerBeta.exe</code></p>
                     <input class="field" id="gameProcess" type="text" placeholder="RobloxPlayerBeta.exe">
                 </div>
                 <div class="card">
@@ -87,7 +80,7 @@
             <section class="page" data-page="hotkeys">
                 <div class="card">
                     <label class="card-title">Hotkeys</label>
-                    <p class="hint">Click a field, then press the keys. Esc clears it. Utility hotkeys work anywhere; the rest only while the game is focused.</p>
+                    <p class="hint">Click a field, then press the keys. Esc clears it. All hotkeys work only while the game is focused.</p>
                     <div class="hk-grid" id="hk-grid"></div>
                 </div>
             </section>

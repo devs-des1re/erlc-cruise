@@ -90,7 +90,6 @@ class Ui {
                 lockOnToggle: Config.GetBool("General", "LockCurrentSpeedOnToggle")
             },
             settings: {
-                onlyFocused: Config.GetBool("Settings", "OnlyWhenFocused"),
                 logging: Config.GetBool("Settings", "Logging"),
                 gameProcess: Config.Get("Settings", "GameProcess")
             },
@@ -191,7 +190,6 @@ class Ui {
             Config.Set("General", "LockCurrentSpeedOnToggle", state.general.lockOnToggle ? 1 : 0)
 
             ; Settings
-            Config.Set("Settings", "OnlyWhenFocused", state.settings.onlyFocused ? 1 : 0)
             Config.Set("Settings", "Logging", state.settings.logging ? 1 : 0)
             gp := Trim(state.settings.gameProcess)
             Config.Set("Settings", "GameProcess", gp != "" ? gp : "RobloxPlayerBeta.exe")

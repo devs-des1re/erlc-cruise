@@ -47,12 +47,10 @@ Persistent
 #Include %A_ScriptDir%\lib\Ui.ahk
 
 ; --- hotkey management -------------------------------------------------------
-; Cruise-control hotkeys fire only while the game is focused (unless disabled
-; in settings). Utility hotkeys (region select, HUD toggle, settings) are always
-; global so they work regardless of focus.
+; Every hotkey fires only while the game window is focused, so typing in any
+; other application never triggers a capture, region pick, or cruise action.
 class Hotkeys {
-    static AlwaysKeys := ["Region", "Settings", "ToggleHud"]
-    static GameKeys := ["Toggle", "IncrementUp", "IncrementDown", "Debug", "Cancel"]
+    static Keys := ["Region", "Settings", "ToggleHud", "Toggle", "IncrementUp", "IncrementDown", "Debug", "Cancel"]
     static Registered := []
 
     ; Clears previous registrations and re-registers everything from Config.
@@ -76,19 +74,9 @@ class Hotkeys {
         }
         this.Registered := []
 
-        onlyFocused := Config.GetBool("Settings", "OnlyWhenFocused")
-
-        ; Global utility hotkeys.
-        HotIf()
-        for name in this.AlwaysKeys
-            this.RegisterOne(name, Handlers[name])
-
-        ; Game hotkeys.
-        if onlyFocused
-            HotIf((*) => GameWindow.IsActive())
-        else
-            HotIf()
-        for name in this.GameKeys
+        ; Scope every hotkey to the game window.
+        HotIf((*) => GameWindow.IsActive())
+        for name in this.Keys
             this.RegisterOne(name, Handlers[name])
 
         HotIf()  ; restore global context

@@ -69,7 +69,6 @@ class Config {
         ),
         "Settings", Map(
             "Logging", 1,
-            "OnlyWhenFocused", 1,
             "GameProcess", "RobloxPlayerBeta.exe"
         ),
         "Version", Map(
