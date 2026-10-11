@@ -40,9 +40,10 @@ Persistent
 #Include %A_ScriptDir%\lib\SpeedReader.ahk
 #Include %A_ScriptDir%\lib\GameWindow.ahk
 #Include %A_ScriptDir%\lib\CruiseEngine.ahk
+#Include %A_ScriptDir%\lib\Hud.ahk
 
 ; --- startup -----------------------------------------------------------------
-; Later phases add the HUD, region selector, and the WebView2 UI here.
+; Later phases add the region selector and the WebView2 UI here.
 
 Paths.EnsureDataDirs()
 Config.Load()
@@ -55,6 +56,14 @@ Engine := CruiseEngine()
 Engine.Input.InstallExitRelease()
 Engine.StartTimers()
 Logger.Info("Engine initialised.")
+
+HudOverlay := Hud()
+SetTimer(RefreshHud.Bind(HudOverlay, Engine), 100)
+Logger.Info("HUD initialised.")
+
+RefreshHud(hud, engine) {
+    hud.Update(engine)
+}
 
 ; --- tray --------------------------------------------------------------------
 A_IconTip := "ERLC Cruise Control"

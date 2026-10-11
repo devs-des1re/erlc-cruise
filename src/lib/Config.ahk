@@ -45,7 +45,8 @@ class Config {
             "Y", 20,
             "Width", 324,
             "Opacity", 225,
-            "Visible", 1
+            "Visible", 1,
+            "ClickThrough", 0
         ),
         "Region", Map(
             "X", 0,
