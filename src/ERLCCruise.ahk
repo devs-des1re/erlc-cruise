@@ -30,12 +30,24 @@ Persistent
 ;@Ahk2Exe-AddResource %A_ScriptDir%\..\vendor\webview\64bit\WebView2Loader.dll, 64bit\WebView2Loader.dll
 
 #Include %A_ScriptDir%\version.ahk
+#Include %A_ScriptDir%\lib\Paths.ahk
+#Include %A_ScriptDir%\lib\Logger.ahk
+#Include %A_ScriptDir%\lib\Config.ahk
 
 ; --- startup -----------------------------------------------------------------
-; Phase 0 scaffold: the module includes (Paths, Logger, Config, engine, HUD,
-; region selector, and the WebView2 UI) are wired up in later phases.
+; Later phases add the engine, HUD, region selector, and the WebView2 UI here.
 
+Paths.EnsureDataDirs()
+Config.Load()
+Logger.Install()
+Logger.Enabled := Config.GetBool("Settings", "Logging")
+Logger.Info("ERLC Cruise Control started (" AppVersion ").")
+Logger.Info("Data folder: " Paths.AppDataDir)
+
+; --- tray --------------------------------------------------------------------
 A_IconTip := "ERLC Cruise Control"
+if (Paths.IconFile != "" && FileExist(Paths.IconFile))
+    TraySetIcon(Paths.IconFile)
 Tray := A_TrayMenu
 Tray.Delete()
 Tray.Add("Close App", (*) => ExitApp())
