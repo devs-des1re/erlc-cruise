@@ -12,6 +12,7 @@ class InputDriver {
 
     Wheld := false
     Sheld := false
+    ThrottleGuardUntil := 0
     BrakeGuardUntil := 0
 
     __New(throttleKey := "w", brakeKey := "s") {
@@ -23,6 +24,7 @@ class InputDriver {
 
     HoldThrottle() {
         if !this.Wheld {
+            this.ThrottleGuardUntil := A_TickCount + this.GuardMs
             Send "{" this.ThrottleKey " down}"
             this.Wheld := true
         }
@@ -30,6 +32,7 @@ class InputDriver {
 
     ReleaseThrottle() {
         if this.Wheld {
+            this.ThrottleGuardUntil := A_TickCount + this.GuardMs
             Send "{" this.ThrottleKey " up}"
             this.Wheld := false
         }
@@ -62,6 +65,10 @@ class InputDriver {
     ; brake going down/up). Used by the ~s cancel handler.
     InBrakeGuard() {
         return A_TickCount < this.BrakeGuardUntil
+    }
+
+    InThrottleGuard() {
+        return A_TickCount < this.ThrottleGuardUntil
     }
 
     ; --- lifecycle ----------------------------------------------------------

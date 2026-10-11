@@ -24,6 +24,7 @@ class Config {
             "IncrementDown", "F8",
             "Debug", "F9",
             "Cancel", "~s",
+            "CancelAccelerate", "~w",
             "Settings", "F10",
             "ToggleHud", "F11"
         ),

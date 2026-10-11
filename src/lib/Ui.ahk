@@ -100,6 +100,7 @@ class Ui {
                 IncrementDown: Config.GetHotkey("IncrementDown"),
                 Debug: Config.GetHotkey("Debug"),
                 Cancel: Config.GetHotkey("Cancel"),
+                CancelAccelerate: Config.GetHotkey("CancelAccelerate"),
                 Settings: Config.GetHotkey("Settings"),
                 ToggleHud: Config.GetHotkey("ToggleHud")
             },
@@ -202,6 +203,7 @@ class Ui {
             Config.SetHotkey("IncrementDown", this.CleanHotkey(hk.IncrementDown))
             Config.SetHotkey("Debug", this.CleanHotkey(hk.Debug))
             Config.SetHotkey("Cancel", this.CleanHotkey(hk.Cancel))
+            Config.SetHotkey("CancelAccelerate", this.CleanHotkey(hk.CancelAccelerate))
             Config.SetHotkey("Settings", this.CleanHotkey(hk.Settings))
             Config.SetHotkey("ToggleHud", this.CleanHotkey(hk.ToggleHud))
 

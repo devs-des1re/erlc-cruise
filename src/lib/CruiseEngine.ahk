@@ -128,6 +128,11 @@ class CruiseEngine {
             this.Stop("Braked")
     }
 
+    OnThrottlePressed() {
+        if (this.Active && !this.Input.InThrottleGuard())
+            this.Stop("Accelerated")
+    }
+
     ; --- loop ---------------------------------------------------------------
 
     Tick() {

@@ -53,7 +53,7 @@ Persistent
 ; Every hotkey fires only while the game window is focused, so typing in any
 ; other application never triggers a capture, region pick, or cruise action.
 class Hotkeys {
-    static Keys := ["Region", "Settings", "ToggleHud", "Toggle", "IncrementUp", "IncrementDown", "Debug", "Cancel"]
+    static Keys := ["Region", "Settings", "ToggleHud", "Toggle", "IncrementUp", "IncrementDown", "Debug", "Cancel", "CancelAccelerate"]
     static Registered := []
 
     ; Clears previous registrations and re-registers everything from Config.
@@ -66,7 +66,8 @@ class Hotkeys {
             "IncrementUp", (*) => gEngine.IncrementUp(),
             "IncrementDown", (*) => gEngine.IncrementDown(),
             "Debug", (*) => gEngine.ToggleDebug(),
-            "Cancel", (*) => gEngine.OnBrakePressed()
+            "Cancel", (*) => gEngine.OnBrakePressed(),
+            "CancelAccelerate", (*) => gEngine.OnThrottlePressed()
         )
 
         ; Turn off every combo we previously registered, so a rebind (or a
