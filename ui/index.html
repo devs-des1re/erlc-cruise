@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERLC Cruise Control</title>
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="titlebar">
+        <div class="titlebar-left">
+            <img class="titlebar-icon" src="icon.png" alt="">
+            <div class="titlebar-title">ERLC Cruise Control</div>
+        </div>
+        <div class="titlebar-buttons">
+            <button class="tb-btn" id="win-min" title="Minimize" aria-label="Minimize">
+                <svg width="10" height="10" viewBox="0 0 10 10"><line x1="1" y1="5" x2="9" y2="5" stroke="currentColor" stroke-width="1.2"/></svg>
+            </button>
+            <button class="tb-btn tb-close" id="win-close" title="Close" aria-label="Close">
+                <svg width="10" height="10" viewBox="0 0 10 10"><line x1="1.5" y1="1.5" x2="8.5" y2="8.5" stroke="currentColor" stroke-width="1.2"/><line x1="8.5" y1="1.5" x2="1.5" y2="8.5" stroke="currentColor" stroke-width="1.2"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <div class="app">
+        <aside class="sidebar">
+            <nav class="nav" id="nav">
+                <button class="nav-item is-active" data-tab="general">General</button>
+                <button class="nav-item" data-tab="hotkeys">Hotkeys</button>
+                <button class="nav-item" data-tab="tuning">Tuning</button>
+                <button class="nav-item" data-tab="hud">HUD</button>
+                <button class="nav-item" data-tab="ocr">OCR &amp; Region</button>
+                <button class="nav-item" data-tab="about">About</button>
+            </nav>
+            <div class="sidebar-foot">
+                <span class="engine-dot" id="engine-dot"></span>
+                <span id="engine-label">Checking...</span>
+            </div>
+        </aside>
+
+        <main class="main">
+            <section class="page is-active" data-page="general">
+                <div class="card">
+                    <label class="card-title" for="startTarget">Starting target speed</label>
+                    <p class="hint">The target before you press the increment hotkeys.</p>
+                    <input class="field" id="startTarget" type="number" min="0" max="999">
+                </div>
+                <div class="card">
+                    <label class="card-title" for="increment">Increment (mph)</label>
+                    <p class="hint">How much each increment hotkey changes the target.</p>
+                    <input class="field" id="increment" type="number" min="1" max="50">
+                </div>
+                <div class="card">
+                    <label class="card-title" for="updateInterval">Update interval (ms)</label>
+                    <p class="hint">Time between speedometer reads. Lower is more responsive but uses more CPU.</p>
+                    <input class="field" id="updateInterval" type="number" min="30" max="1000">
+                </div>
+                <div class="card">
+                    <label class="switch">
+                        <input type="checkbox" id="lockOnToggle">
+                        <span class="switch-track"><span class="switch-thumb"></span></span>
+                        <span class="switch-label">Lock to current speed when enabling cruise</span>
+                    </label>
+                </div>
+                <div class="card">
+                    <label class="switch">
+                        <input type="checkbox" id="onlyFocused">
+                        <span class="switch-track"><span class="switch-thumb"></span></span>
+                        <span class="switch-label">Cruise hotkeys only when the game is focused</span>
+                    </label>
+                </div>
+                <div class="card">
+                    <label class="card-title" for="gameProcess">Game process</label>
+                    <p class="hint">Used to scope hotkeys and detect focus. Default: <code>RobloxPlayerBeta.exe</code></p>
+                    <input class="field" id="gameProcess" type="text" placeholder="RobloxPlayerBeta.exe">
+                </div>
+                <div class="card">
+                    <label class="switch">
+                        <input type="checkbox" id="logging">
+                        <span class="switch-track"><span class="switch-thumb"></span></span>
+                        <span class="switch-label">Enable logging</span>
+                    </label>
+                </div>
+            </section>
+
+            <section class="page" data-page="hotkeys">
+                <div class="card">
+                    <label class="card-title">Hotkeys</label>
+                    <p class="hint">Click a field, then press the keys. Esc clears it. Utility hotkeys work anywhere; the rest only while the game is focused.</p>
+                    <div class="hk-grid" id="hk-grid"></div>
+                </div>
+            </section>
+
+            <section class="page" data-page="tuning">
+                <div class="card">
+                    <label class="card-title">Throttle PID</label>
+                    <p class="hint">Reaction to speed error. Leave as-is unless you know what you're doing.</p>
+                    <div class="grid" id="pid-grid"></div>
+                </div>
+                <div class="card">
+                    <label class="card-title">Throttle gaps</label>
+                    <div class="grid" id="gap-grid"></div>
+                </div>
+                <div class="card">
+                    <label class="card-title">Braking</label>
+                    <div class="grid" id="brake-grid"></div>
+                </div>
+                <div class="card">
+                    <p class="hint">Tip: the default values are tuned for a stable road cruise. Increase Kp for faster response, Kd to damp overshoot.</p>
+                    <button class="btn btn-ghost" id="reset-tuning">Reset tuning to defaults</button>
+                </div>
+            </section>
+
+            <section class="page" data-page="hud">
+                <div class="card">
+                    <label class="switch">
+                        <input type="checkbox" id="hudVisible">
+                        <span class="switch-track"><span class="switch-thumb"></span></span>
+                        <span class="switch-label">Show the HUD overlay</span>
+                    </label>
+                    <label class="switch">
+                        <input type="checkbox" id="hudClickThrough">
+                        <span class="switch-track"><span class="switch-thumb"></span></span>
+                        <span class="switch-label">Click-through (never captures the mouse)</span>
+                    </label>
+                </div>
+                <div class="card">
+                    <label class="card-title">Position &amp; size</label>
+                    <div class="grid" id="hud-grid"></div>
+                </div>
+                <div class="card">
+                    <button class="btn btn-ghost" id="hud-snap-tl">Snap to top-left</button>
+                    <button class="btn btn-ghost" id="hud-snap-tr">Snap to top-right</button>
+                </div>
+            </section>
+
+            <section class="page" data-page="ocr">
+                <div class="card">
+                    <label class="card-title">Speed region</label>
+                    <p class="hint" id="region-summary">No region set.</p>
+                    <button class="btn" id="select-region">Select region</button>
+                    <button class="btn btn-ghost" id="test-read">Test read</button>
+                </div>
+                <div class="card">
+                    <label class="card-title">OCR options</label>
+                    <div class="grid" id="ocr-grid"></div>
+                </div>
+                <div class="card">
+                    <label class="switch">
+                        <input type="checkbox" id="ocrGrayscale">
+                        <span class="switch-track"><span class="switch-thumb"></span></span>
+                        <span class="switch-label">Grayscale before OCR</span>
+                    </label>
+                    <label class="switch">
+                        <input type="checkbox" id="ocrInvert">
+                        <span class="switch-track"><span class="switch-thumb"></span></span>
+                        <span class="switch-label">Invert colors</span>
+                    </label>
+                </div>
+            </section>
+
+            <section class="page" data-page="about">
+                <div class="card">
+                    <label class="card-title">Debug info</label>
+                    <p class="hint">Basic environment and status details.</p>
+                    <dl class="kv" id="about-info"></dl>
+                    <button class="btn btn-sm" id="copy-debug">Copy to clipboard</button>
+                </div>
+                <div class="card">
+                    <button class="btn btn-ghost" id="open-folder">Open data folder</button>
+                    <button class="btn btn-ghost" id="open-logs">Open logs</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <span class="footer-note">Not affiliated with ERLC or Roblox Corporation.</span>
+        <div class="footer-actions">
+            <span class="status" id="status">Ready.</span>
+            <button class="btn btn-primary" id="save">Save</button>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

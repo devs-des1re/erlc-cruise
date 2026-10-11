@@ -42,6 +42,9 @@ Persistent
 #Include %A_ScriptDir%\lib\CruiseEngine.ahk
 #Include %A_ScriptDir%\lib\Hud.ahk
 #Include %A_ScriptDir%\lib\RegionSelector.ahk
+#Include %A_ScriptDir%\..\vendor\JSON.ahk
+#Include %A_ScriptDir%\..\vendor\webview\WebViewToo.ahk
+#Include %A_ScriptDir%\lib\Ui.ahk
 
 ; --- hotkey management -------------------------------------------------------
 ; Cruise-control hotkeys fire only while the game is focused (unless disabled
@@ -50,6 +53,7 @@ Persistent
 class Hotkeys {
     static AlwaysKeys := ["Region", "Settings", "ToggleHud"]
     static GameKeys := ["Toggle", "IncrementUp", "IncrementDown", "Debug", "Cancel"]
+    static Registered := []
 
     ; Clears previous registrations and re-registers everything from Config.
     static Register() {
@@ -64,14 +68,13 @@ class Hotkeys {
             "Cancel", (*) => gEngine.OnBrakePressed()
         )
 
-        ; Clear previous registrations.
+        ; Turn off every combo we previously registered, so a rebind (or a
+        ; cleared field) never leaves a stale hotkey active.
         HotIf()
-        for name, hk in Handlers {
-            key := Config.GetHotkey(name)
-            if (key != "") {
-                try Hotkey key, "Off"
-            }
+        for prev in this.Registered {
+            try Hotkey prev, "Off"
         }
+        this.Registered := []
 
         onlyFocused := Config.GetBool("Settings", "OnlyWhenFocused")
 
@@ -97,6 +100,7 @@ class Hotkeys {
             return
         try {
             Hotkey key, fn, "On"
+            this.Registered.Push(key)
             Logger.Info("Registered hotkey " name " = " key ".")
         } catch as e {
             Logger.Exception(e, "Register hotkey " name)
@@ -123,8 +127,7 @@ class App {
     }
 
     static OpenSettings() {
-        ; Phase 7 adds the WebView2 settings window.
-        this.Notify("ERLC Cruise Control", "Settings UI is coming in the next update.")
+        Ui.Open()
     }
 
     static OpenDataFolder() {
