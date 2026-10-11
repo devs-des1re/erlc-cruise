@@ -15,7 +15,7 @@ const mockState = {
     settings: { logging: true, gameProcess: "RobloxPlayerBeta.exe" },
     hotkeys: {
         Region: "F5", Toggle: "F6", IncrementUp: "F7", IncrementDown: "F8",
-        Debug: "F9", Cancel: "~s", Settings: "F10", ToggleHud: "F11",
+        Debug: "F9", Cancel: "~s", CancelAccelerate: "~w", Settings: "F10", ToggleHud: "F11",
     },
     controller: {
         PwmPeriod: 300, Kp: 0.08, Ki: 0.02, Kd: 0.05, FullThrottleGap: 10,
@@ -162,10 +162,11 @@ const HOTKEY_FIELDS = [
     ["Toggle", "Cruise on/off"],
     ["IncrementUp", "Target + increment"],
     ["IncrementDown", "Target − increment"],
-    ["Debug", "Debug toggle"],
     ["Cancel", "Cancel (brake)"],
+    ["CancelAccelerate", "Cancel (accelerate)"],
     ["Settings", "Open settings"],
     ["ToggleHud", "Toggle HUD"],
+    ["Debug", "Debug toggle"],
 ];
 
 const PID_FIELDS = [

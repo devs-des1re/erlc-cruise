@@ -23,7 +23,7 @@ class CruiseEngine {
         this.Reader := SpeedReader()
         this.Ctrl := Controller()
         this.Input := InputDriver()
-        this.Target := Config.GetInt("General", "StartTarget")
+        this.Target := this.ClampTarget(Config.GetInt("General", "StartTarget"))
         this.TickFn := this.Tick.Bind(this)
         this.PwmFn := this.Pwm.Bind(this)
         this.Note := ""
@@ -34,7 +34,7 @@ class CruiseEngine {
     Reload() {
         this.Ctrl.LoadConfig()
         if !this.Active
-            this.Target := Config.GetInt("General", "StartTarget")
+            this.Target := this.ClampTarget(Config.GetInt("General", "StartTarget"))
     }
 
     ; --- timers -------------------------------------------------------------
@@ -65,7 +65,7 @@ class CruiseEngine {
         }
 
         if Config.GetBool("General", "LockCurrentSpeedOnToggle")
-            this.Target := read.Speed
+            this.Target := this.ClampTarget(read.Speed)
 
         this.Reader.Reset(read.Speed)
         this.Ctrl.PrimeStart(read.Speed)
@@ -93,7 +93,7 @@ class CruiseEngine {
             this.BuildStatus()
             return
         }
-        this.Target := Max(0, this.Target + delta)
+        this.Target := this.ClampTarget(this.Target + delta)
         this.LastAction := "Target " (delta > 0 ? "increased" : "decreased") " to " this.Target
         Logger.Action("Target adjusted to " this.Target ".")
         this.BuildStatus()
@@ -105,6 +105,10 @@ class CruiseEngine {
 
     IncrementDown() {
         this.Adjust(-Config.GetInt("General", "Increment"))
+    }
+
+    ClampTarget(speed) {
+        return Min(Config.MaxTargetSpeed, Max(0, speed))
     }
 
     ToggleDebug() {
@@ -122,6 +126,11 @@ class CruiseEngine {
     OnBrakePressed() {
         if (this.Active && !this.Input.Sheld && !this.Input.InBrakeGuard())
             this.Stop("Braked")
+    }
+
+    OnThrottlePressed() {
+        if (this.Active && !this.Input.InThrottleGuard())
+            this.Stop("Accelerated")
     }
 
     ; --- loop ---------------------------------------------------------------

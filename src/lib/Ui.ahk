@@ -84,7 +84,7 @@ class Ui {
         r := Config.GetRegion()
         return {
             general: {
-                startTarget: Config.GetInt("General", "StartTarget"),
+                startTarget: Min(Config.MaxTargetSpeed, Max(0, Config.GetInt("General", "StartTarget"))),
                 increment: Config.GetInt("General", "Increment"),
                 updateInterval: Config.GetInt("General", "UpdateInterval"),
                 lockOnToggle: Config.GetBool("General", "LockCurrentSpeedOnToggle")
@@ -100,6 +100,7 @@ class Ui {
                 IncrementDown: Config.GetHotkey("IncrementDown"),
                 Debug: Config.GetHotkey("Debug"),
                 Cancel: Config.GetHotkey("Cancel"),
+                CancelAccelerate: Config.GetHotkey("CancelAccelerate"),
                 Settings: Config.GetHotkey("Settings"),
                 ToggleHud: Config.GetHotkey("ToggleHud")
             },
@@ -184,7 +185,7 @@ class Ui {
             state := JSON.parse(jsonText, false, false)
 
             ; General
-            Config.Set("General", "StartTarget", this.ToInt(state.general.startTarget, 40))
+            Config.Set("General", "StartTarget", Min(Config.MaxTargetSpeed, Max(0, this.ToInt(state.general.startTarget, 40))))
             Config.Set("General", "Increment", this.ToInt(state.general.increment, 5))
             Config.Set("General", "UpdateInterval", this.ToInt(state.general.updateInterval, 100))
             Config.Set("General", "LockCurrentSpeedOnToggle", state.general.lockOnToggle ? 1 : 0)
@@ -202,6 +203,7 @@ class Ui {
             Config.SetHotkey("IncrementDown", this.CleanHotkey(hk.IncrementDown))
             Config.SetHotkey("Debug", this.CleanHotkey(hk.Debug))
             Config.SetHotkey("Cancel", this.CleanHotkey(hk.Cancel))
+            Config.SetHotkey("CancelAccelerate", this.CleanHotkey(hk.CancelAccelerate))
             Config.SetHotkey("Settings", this.CleanHotkey(hk.Settings))
             Config.SetHotkey("ToggleHud", this.CleanHotkey(hk.ToggleHud))
 
