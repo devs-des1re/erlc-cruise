@@ -1,0 +1,20 @@
+# Build output
+dist/
+build/
+*.bak
+installer/Output/
+
+# Ahk2Exe output
+*.exe.z
+ERLCCruise.exe
+
+# Local runtime data (canonical copy lives in %APPDATA%\ERLCCruise)
+captures/
+logs/
+config.ini
+
+# OS / editor cruft
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
