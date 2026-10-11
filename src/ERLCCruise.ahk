@@ -41,6 +41,7 @@ Persistent
 #Include %A_ScriptDir%\lib\GameWindow.ahk
 #Include %A_ScriptDir%\lib\CruiseEngine.ahk
 #Include %A_ScriptDir%\lib\Hud.ahk
+#Include %A_ScriptDir%\lib\RegionSelector.ahk
 
 ; --- startup -----------------------------------------------------------------
 ; Later phases add the region selector and the WebView2 UI here.
