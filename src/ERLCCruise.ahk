@@ -33,6 +33,11 @@ Persistent
 #Include %A_ScriptDir%\lib\Paths.ahk
 #Include %A_ScriptDir%\lib\Logger.ahk
 #Include %A_ScriptDir%\lib\Config.ahk
+#Include %A_ScriptDir%\lib\OCR.ahk
+#Include %A_ScriptDir%\lib\SpeedParser.ahk
+#Include %A_ScriptDir%\lib\InputDriver.ahk
+#Include %A_ScriptDir%\lib\Controller.ahk
+#Include %A_ScriptDir%\lib\SpeedReader.ahk
 
 ; --- startup -----------------------------------------------------------------
 ; Later phases add the engine, HUD, region selector, and the WebView2 UI here.
