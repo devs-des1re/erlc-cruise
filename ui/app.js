@@ -485,7 +485,7 @@ function initActions() {
         document.getElementById("Y").value = 20;
     });
     document.getElementById("hud-snap-tr").addEventListener("click", () => {
-        const w = parseInt(document.getElementById("Width").value, 10) || 324;
+        const w = parseInt(document.getElementById("Width").value, 10) || 300;
         document.getElementById("X").value = Math.max(0, (window.screen.availWidth || 1920) - w - 20);
         document.getElementById("Y").value = 20;
     });
