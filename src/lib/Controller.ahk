@@ -45,6 +45,9 @@ class Controller {
         this.BrakeLookahead       := c.GetFloat("Controller", "BrakeLookahead")
         this.MinBrakeHold         := c.GetInt("Controller", "MinBrakeHold")
         this.MinBrakeSpeed        := c.GetInt("Controller", "MinBrakeSpeed")
+        this.LearnedDuty          := c.GetFloat("Controller", "LearnedDuty")
+        if (this.LearnedDuty <= 0 || this.LearnedDuty > 1)
+            this.LearnedDuty := 0.4
     }
 
     ; Re-initialises the learned hold-throttle when cruise starts.

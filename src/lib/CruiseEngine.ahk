@@ -22,6 +22,7 @@ class CruiseEngine {
     __New() {
         this.Reader := SpeedReader()
         this.Ctrl := Controller()
+        this.Ctrl.LoadConfig()
         this.Input := InputDriver()
         this.Target := this.ClampTarget(Config.GetInt("General", "StartTarget"))
         this.TickFn := this.Tick.Bind(this)
@@ -88,8 +89,10 @@ class CruiseEngine {
     }
 
     Stop(reason := "Cruise off") {
-        if this.Active
+        if this.Active {
             this.Ctrl.MaybePersist(this.Target, this.Reader.LastSpeed)
+            this.PersistLearnedDuty()
+        }
         this.Active := false
         this.Ctrl.Duty := 0
         this.Ctrl.BrakeDuty := 0
@@ -121,6 +124,16 @@ class CruiseEngine {
 
     ClampTarget(speed) {
         return Min(Config.MaxTargetSpeed, Max(0, speed))
+    }
+
+    ; Writes the controller's learned hold-throttle back to Config and the
+    ; active profile, so each vehicle keeps what it learned across sessions.
+    PersistLearnedDuty() {
+        duty := this.Ctrl.LearnedDuty
+        Config.Set("Controller", "LearnedDuty", duty)
+        active := Profiles.Active()
+        if (active != "")
+            Profiles.SetValue(active, "Controller", "LearnedDuty", duty)
     }
 
     ToggleDebug() {

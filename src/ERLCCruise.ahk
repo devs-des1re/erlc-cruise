@@ -36,6 +36,7 @@ Persistent
 #Include %A_ScriptDir%\lib\Paths.ahk
 #Include %A_ScriptDir%\lib\Logger.ahk
 #Include %A_ScriptDir%\lib\Config.ahk
+#Include %A_ScriptDir%\lib\Profiles.ahk
 #Include %A_ScriptDir%\lib\OCR.ahk
 #Include %A_ScriptDir%\lib\SpeedParser.ahk
 #Include %A_ScriptDir%\lib\InputDriver.ahk
@@ -168,6 +169,10 @@ class Shell {
 ; --- startup -----------------------------------------------------------------
 Paths.EnsureDataDirs()
 Config.Load()
+; Seed/repair the profile store, then load the active vehicle profile into
+; Config so the last-used car's tuning is what the engine starts with.
+Profiles.Ensure()
+Profiles.Apply(Profiles.Active())
 Logger.Install()
 Logger.Enabled := Config.GetBool("Settings", "Logging")
 Shell.RegisterIdentity()

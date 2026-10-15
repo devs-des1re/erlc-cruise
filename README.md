@@ -14,6 +14,7 @@ control for ERLC.
 - Always-on-top HUD showing target, speed, throttle, brake, and acceleration.
 - Snipping-tool style region selection with a live preview of what OCR reads.
 - Fully configurable hotkeys, HUD position/opacity, speed increment, and tuning.
+- Per-vehicle profiles: save named tuning presets and switch between them.
 - Configuration and logs saved to `%APPDATA%\ERLCCruise`.
 
 ## Requirements
@@ -46,6 +47,24 @@ never triggers a capture.
 - Drag it anywhere on screen (when click-through is off); the position is saved.
 - Every field can be toggled on or off in the **HUD** tab, and its width,
   opacity, and click-through can be set there too.
+
+## Vehicle profiles
+
+Different cars handle differently, so tuning can be saved as named profiles and
+switched between. Each profile stores the full tuning set (controller, general,
+OCR, and HUD values); the speed region stays global since it depends on your
+screen, not the car.
+
+Open the **Tuning** tab to:
+
+- **Load** a profile into the app (it becomes the active vehicle).
+- **Save** the current values into the active profile.
+- **New / Rename / Delete** profiles. At least one profile always remains.
+
+Profiles live in `%APPDATA%\ERLCCruise\profiles.ini`, separate from
+`config.ini`. The active profile's tuning is loaded on startup, and edits made
+in the settings window are written back to it on Save. The controller's learned
+hold-throttle is also remembered per profile.
 
 ## License
 

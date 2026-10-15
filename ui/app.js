@@ -28,6 +28,7 @@ const mockState = {
     },
     ocr: { Language: "en-us", Scale: 3, Grayscale: false, InvertColors: false, Monochrome: 0 },
     region: { x: 0, y: 0, w: 0, h: 0, set: false },
+    profiles: { list: ["Default"], active: "Default" },
     debug: { version: "v0.0.0", os: "Windows", ahk: "v2.0", webview2: "-", game: "not found", region: "not set", logging: "on", dataDir: "" },
 };
 
@@ -66,6 +67,40 @@ const Bridge = {
     async testRead() {
         if (isHost) return await call("TestRead");
         return "Preview mode.";
+    },
+    async profileApply(name) {
+        if (isHost) return JSON.parse(await call("ProfileApply", name));
+        mockState.profiles.active = name;
+        return JSON.parse(JSON.stringify(mockState));
+    },
+    async profileSave(name) {
+        if (isHost) return JSON.parse(await call("ProfileSave", name));
+        return JSON.parse(JSON.stringify(mockState));
+    },
+    async profileCreate(name) {
+        if (isHost) return JSON.parse(await call("ProfileCreate", name));
+        if (name && !mockState.profiles.list.includes(name)) {
+            mockState.profiles.list.push(name);
+            mockState.profiles.active = name;
+        }
+        return JSON.parse(JSON.stringify(mockState));
+    },
+    async profileRename(oldName, newName) {
+        if (isHost) return JSON.parse(await call("ProfileRename", oldName + "\n" + newName));
+        const i = mockState.profiles.list.indexOf(oldName);
+        if (i >= 0) {
+            mockState.profiles.list[i] = newName;
+            if (mockState.profiles.active === oldName) mockState.profiles.active = newName;
+        }
+        return JSON.parse(JSON.stringify(mockState));
+    },
+    async profileDelete(name) {
+        if (isHost) return JSON.parse(await call("ProfileDelete", name));
+        const list = mockState.profiles.list;
+        if (list.length <= 1) return JSON.parse(JSON.stringify(mockState));
+        mockState.profiles.list = list.filter((n) => n !== name);
+        if (mockState.profiles.active === name) mockState.profiles.active = mockState.profiles.list[0];
+        return JSON.parse(JSON.stringify(mockState));
     },
 };
 
@@ -257,6 +292,22 @@ function renderGrid(gridId, fields, source) {
     fields.forEach(([key, label, step]) => grid.appendChild(fieldInput(key, label, source[key], step)));
 }
 
+function renderProfiles(profiles) {
+    const select = document.getElementById("profile-select");
+    const list = (profiles && profiles.list) || [];
+    const active = (profiles && profiles.active) || "";
+    select.innerHTML = "";
+    list.forEach((name) => {
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        if (name === active) opt.selected = true;
+        select.appendChild(opt);
+    });
+    select.disabled = list.length === 0;
+    document.getElementById("profile-delete").disabled = list.length <= 1;
+}
+
 function renderHudToggles(hud) {
     const grid = document.getElementById("hud-fields");
     grid.innerHTML = "";
@@ -309,6 +360,7 @@ function render(state) {
     renderHotkeys(state.hotkeys || {});
 
     // Tuning
+    renderProfiles(state.profiles);
     renderGrid("pid-grid", PID_FIELDS, state.controller);
     renderGrid("gap-grid", GAP_FIELDS, state.controller);
     renderGrid("brake-grid", BRAKE_FIELDS, state.controller);
@@ -435,6 +487,75 @@ function initTitleBar() {
 }
 
 // ---------------------------------------------------------------------------
+// Modal (replaces native prompt/confirm, which render as Edge chrome dialogs)
+// ---------------------------------------------------------------------------
+
+// Opens the themed modal. Options: { title, message, input, value, okLabel,
+// cancelLabel, danger }. Returns a Promise resolving to the entered string (when
+// `input`), true (confirmed), or null (cancelled).
+function openModal(opts) {
+    const o = opts || {};
+    return new Promise((resolve) => {
+        const overlay = document.getElementById("modal-overlay");
+        const titleEl = document.getElementById("modal-title");
+        const messageEl = document.getElementById("modal-message");
+        const inputEl = document.getElementById("modal-input");
+        const okBtn = document.getElementById("modal-ok");
+        const cancelBtn = document.getElementById("modal-cancel");
+
+        titleEl.textContent = o.title || "";
+        messageEl.textContent = o.message || "";
+        messageEl.hidden = !o.message;
+
+        const wantsInput = !!o.input;
+        inputEl.hidden = !wantsInput;
+        inputEl.value = wantsInput ? (o.value || "") : "";
+        inputEl.placeholder = o.placeholder || "";
+
+        okBtn.textContent = o.okLabel || "OK";
+        cancelBtn.textContent = o.cancelLabel || "Cancel";
+        cancelBtn.hidden = o.cancelLabel === null;
+
+        const close = (result) => {
+            overlay.hidden = true;
+            document.removeEventListener("keydown", onKey, true);
+            okBtn.removeEventListener("click", onOk);
+            cancelBtn.removeEventListener("click", onCancel);
+            overlay.removeEventListener("mousedown", onOverlay);
+            resolve(result);
+        };
+        const onOk = () => close(wantsInput ? inputEl.value.trim() : true);
+        const onCancel = () => close(null);
+        const onOverlay = (e) => { if (e.target === overlay) close(null); };
+        const onKey = (e) => {
+            if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(null); }
+            else if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); onOk(); }
+        };
+
+        okBtn.addEventListener("click", onOk);
+        cancelBtn.addEventListener("click", onCancel);
+        overlay.addEventListener("mousedown", onOverlay);
+        document.addEventListener("keydown", onKey, true);
+
+        overlay.hidden = false;
+        if (wantsInput) {
+            inputEl.focus();
+            inputEl.select();
+        } else {
+            okBtn.focus();
+        }
+    });
+}
+
+function modalPrompt(title, value) {
+    return openModal({ title, input: true, value: value || "", okLabel: "Save" });
+}
+
+function modalConfirm(title, message, okLabel) {
+    return openModal({ title, message, okLabel: okLabel || "Confirm", danger: true });
+}
+
+// ---------------------------------------------------------------------------
 // Actions
 // ---------------------------------------------------------------------------
 
@@ -471,12 +592,74 @@ function initActions() {
     });
 
     document.getElementById("reset-tuning").addEventListener("click", async () => {
-        if (!confirm("Reset ALL settings to their defaults?")) return;
+        if (!(await modalConfirm("Reset settings", "Reset ALL settings to their defaults?", "Reset"))) return;
         try {
             render(await Bridge.resetDefaults());
             setStatus("Defaults restored.", "ok");
         } catch (e) {
             setStatus("Reset failed: " + e, "err");
+        }
+    });
+
+    // Choosing a profile from the dropdown switches the active vehicle.
+    document.getElementById("profile-select").addEventListener("change", async (e) => {
+        const name = e.target.value;
+        if (!name) return;
+        setStatus("Loading profile " + name + "...");
+        try {
+            render(await Bridge.profileApply(name));
+            setStatus("Loaded profile " + name + ".", "ok");
+        } catch (err) {
+            setStatus("Load failed: " + err, "err");
+        }
+    });
+
+    document.getElementById("profile-save").addEventListener("click", async () => {
+        const name = document.getElementById("profile-select").value;
+        if (!name) return;
+        try {
+            // Persist the current form first, then snapshot it into this profile.
+            await Bridge.save(collect());
+            render(await Bridge.profileSave(name));
+            setStatus("Saved profile " + name + ".", "ok");
+        } catch (e) {
+            setStatus("Save failed: " + e, "err");
+        }
+    });
+
+    document.getElementById("profile-new").addEventListener("click", async () => {
+        const name = await modalPrompt("New profile", "");
+        if (!name) return;
+        try {
+            render(await Bridge.profileCreate(name));
+            setStatus("Created profile " + name + ".", "ok");
+        } catch (e) {
+            setStatus("Create failed: " + e, "err");
+        }
+    });
+
+    document.getElementById("profile-rename").addEventListener("click", async () => {
+        const oldName = document.getElementById("profile-select").value;
+        if (!oldName) return;
+        const newName = await modalPrompt("Rename profile", oldName);
+        if (!newName || newName === oldName) return;
+        try {
+            render(await Bridge.profileRename(oldName, newName));
+            setStatus("Renamed to " + newName + ".", "ok");
+        } catch (e) {
+            setStatus("Rename failed: " + e, "err");
+        }
+    });
+
+    document.getElementById("profile-delete").addEventListener("click", async () => {
+        const name = document.getElementById("profile-select").value;
+        if (!name) return;
+        if (!(await modalConfirm("Delete profile", 'Delete profile "' + name + '"?', "Delete"))) return;
+        try {
+            render(await Bridge.profileDelete(name));
+            setStatus("Deleted profile " + name + ".", "ok");
+        } catch (e) {
+            setStatus("Delete failed: " + e, "err");
         }
     });
 

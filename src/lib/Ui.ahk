@@ -41,6 +41,11 @@ class Ui {
         g.AddCallbackToScript("OpenLogs", (*) => (Run(Paths.LogsDir), "Opened."))
         g.AddCallbackToScript("SelectRegion", (*) => this.OnSelectRegion())
         g.AddCallbackToScript("TestRead", (*) => this.OnTestRead())
+        g.AddCallbackToScript("ProfileApply", (wv, name) => this.OnProfileApply(String(name)))
+        g.AddCallbackToScript("ProfileSave", (wv, name) => this.OnProfileSave(String(name)))
+        g.AddCallbackToScript("ProfileCreate", (wv, name) => this.OnProfileCreate(String(name)))
+        g.AddCallbackToScript("ProfileRename", (wv, payload) => this.OnProfileRename(String(payload)))
+        g.AddCallbackToScript("ProfileDelete", (wv, name) => this.OnProfileDelete(String(name)))
         g.AddCallbackToScript("CloseWindow", (*) => (this.Hide(), ""))
 
         g.OnEvent("Close", (*) => this.Hide())
@@ -140,6 +145,7 @@ class Ui {
                 Monochrome: Config.GetInt("Ocr", "Monochrome")
             },
             region: {x: r.X, y: r.Y, w: r.W, h: r.H, set: Config.HasRegion()},
+            profiles: {list: Profiles.List(), active: Profiles.Active()},
             debug: this.BuildDebug()
         }
     }
@@ -246,9 +252,11 @@ class Ui {
             ; Apply live
             Logger.Enabled := Config.GetBool("Settings", "Logging")
             Logger.Info("Settings saved from UI.")
-            Hotkeys.Register()
-            gEngine.Reload()
-            gHud.ApplyConfig()
+            this.ApplyLive()
+            ; Keep the active vehicle profile in step with the edited values.
+            active := Profiles.Active()
+            if (active != "")
+                Profiles.Save(active)
 
             this.PushState()
             this.PushStatus("Saved.", "ok")
@@ -260,14 +268,23 @@ class Ui {
         }
     }
 
-    static OnReset() {
-        for section, keys in Config.Defaults
-            for key, def in keys
-                Config.Set(section, key, def)
+    ; Re-applies everything that reads from Config after a change.
+    static ApplyLive() {
         Logger.Enabled := Config.GetBool("Settings", "Logging")
         Hotkeys.Register()
         gEngine.Reload()
         gHud.ApplyConfig()
+    }
+
+    static OnReset() {
+        for section, keys in Config.Defaults
+            for key, def in keys
+                Config.Set(section, key, def)
+        this.ApplyLive()
+        ; Mirror the reset into the active profile so it does not drift.
+        active := Profiles.Active()
+        if (active != "")
+            Profiles.Save(active)
         this.PushState()
         this.PushStatus("Defaults restored.", "ok")
         return this.GetStateJson()
@@ -294,6 +311,66 @@ class Ui {
         }
         this.PushStatus(Format("Read {1} (raw '{2}').", read.Speed, read.Raw), "ok")
         return "ok"
+    }
+
+    ; --- vehicle profiles ---------------------------------------------------
+    ; Each handler mutates the store, re-applies live, and returns the fresh
+    ; state JSON so the page can re-render from a single round trip.
+
+    static OnProfileApply(name) {
+        if !Profiles.Apply(name) {
+            this.PushStatus("Profile not found: " name, "err")
+            return this.GetStateJson()
+        }
+        Profiles.SetActive(name)
+        this.ApplyLive()
+        this.PushStatus("Applied profile " name ".", "ok")
+        return this.GetStateJson()
+    }
+
+    static OnProfileSave(name) {
+        if !Profiles.Save(name) {
+            this.PushStatus("Could not save profile " name ".", "err")
+            return this.GetStateJson()
+        }
+        ; Saving to a profile also makes it the one in use.
+        Profiles.SetActive(name)
+        this.PushStatus("Saved profile " name ".", "ok")
+        return this.GetStateJson()
+    }
+
+    static OnProfileCreate(name) {
+        if !Profiles.Create(name) {
+            this.PushStatus("Could not create profile (name empty or already exists).", "err")
+            return this.GetStateJson()
+        }
+        this.ApplyLive()
+        this.PushStatus("Created profile " Profiles.Active() ".", "ok")
+        return this.GetStateJson()
+    }
+
+    ; payload is "old`nnew" so names with spaces survive the round trip.
+    static OnProfileRename(payload) {
+        parts := StrSplit(payload, "`n", , 2)
+        old := parts.Length >= 1 ? parts[1] : ""
+        new := parts.Length >= 2 ? parts[2] : ""
+        if !Profiles.Rename(old, new) {
+            this.PushStatus("Rename failed (name empty or already in use).", "err")
+            return this.GetStateJson()
+        }
+        this.PushStatus("Renamed to " Profiles.Sanitize(new) ".", "ok")
+        return this.GetStateJson()
+    }
+
+    static OnProfileDelete(name) {
+        if !Profiles.Delete(name) {
+            this.PushStatus("Cannot delete the last profile.", "err")
+            return this.GetStateJson()
+        }
+        ; If we removed the active one, load whatever is now active.
+        this.ApplyLive()
+        this.PushStatus("Deleted profile " name ".", "ok")
+        return this.GetStateJson()
     }
 
     ; --- push helpers -------------------------------------------------------

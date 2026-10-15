@@ -87,6 +87,17 @@
 
             <section class="page" data-page="tuning">
                 <div class="card">
+                    <label class="card-title">Vehicle profile</label>
+                    <p class="hint">Different cars handle differently. Save tuning as named profiles and switch between them.</p>
+                    <div class="profile-bar">
+                        <select class="field" id="profile-select" aria-label="Active vehicle profile"></select>
+                        <button class="btn" id="profile-save">Save</button>
+                        <button class="btn btn-ghost" id="profile-new">New…</button>
+                        <button class="btn btn-ghost" id="profile-rename">Rename…</button>
+                        <button class="btn btn-ghost" id="profile-delete">Delete</button>
+                    </div>
+                </div>
+                <div class="card">
                     <label class="card-title">Throttle PID</label>
                     <p class="hint">Reaction to speed error. Leave as-is unless you know what you're doing.</p>
                     <div class="grid" id="pid-grid"></div>
@@ -180,6 +191,18 @@
             <button class="btn btn-primary" id="save">Save</button>
         </div>
     </footer>
+
+    <div class="modal-overlay" id="modal-overlay" hidden>
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <div class="modal-title" id="modal-title">Title</div>
+            <p class="modal-message" id="modal-message"></p>
+            <input class="field modal-input" id="modal-input" type="text" autocomplete="off">
+            <div class="modal-actions">
+                <button class="btn btn-ghost" id="modal-cancel">Cancel</button>
+                <button class="btn btn-primary" id="modal-ok">OK</button>
+            </div>
+        </div>
+    </div>
 
     <script src="app.js"></script>
 </body>

@@ -278,6 +278,32 @@ body {
     font-size: 12.5px;
 }
 
+/* Vehicle profile bar (select + action buttons) */
+.profile-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-bar .field {
+    flex: 1 1 180px;
+    min-width: 140px;
+}
+
+.profile-bar .btn {
+    flex-shrink: 0;
+}
+
+.profile-bar .btn + .btn {
+    margin-left: 0;
+}
+
+.profile-bar .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
 /* HUD field toggles (label + checkbox in a row) */
 .field-item:has(.checkbox) {
     flex-direction: row;
@@ -471,6 +497,55 @@ body {
 
 .status[data-kind="ok"] { color: var(--text); }
 .status[data-kind="err"] { color: var(--text-dim); }
+
+/* Modal (replaces native prompt/confirm) */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    -webkit-app-region: no-drag;
+}
+
+.modal-overlay[hidden] { display: none; }
+
+.modal {
+    width: 340px;
+    max-width: calc(100vw - 40px);
+    background: var(--panel);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    padding: 18px 20px 16px;
+    outline: 1px solid var(--border);
+    outline-offset: -1px;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+}
+
+.modal-title {
+    font-weight: 500;
+    font-size: 14px;
+    margin-bottom: 6px;
+}
+
+.modal-message {
+    color: var(--text-dim);
+    font-size: 13px;
+    margin-bottom: 14px;
+}
+
+.modal-message:empty { display: none; }
+
+.modal-input { margin-bottom: 16px; }
+.modal-input[hidden] { display: none; }
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 10px; }

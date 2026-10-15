@@ -40,7 +40,8 @@ class Config {
             "BrakeReleaseGap", "1.5",
             "BrakeLookahead", "0.6",
             "MinBrakeHold", 500,
-            "MinBrakeSpeed", 8
+            "MinBrakeSpeed", 8,
+            "LearnedDuty", "0.4"
         ),
         "Hud", Map(
             "X", 20,
