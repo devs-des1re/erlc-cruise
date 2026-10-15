@@ -133,9 +133,17 @@ class CruiseEngine {
             this.Stop("Accelerated")
     }
 
+    ; If cruise is running but the game window no longer has focus, stop so our
+    ; held throttle/brake keys never leak into whatever window took focus.
+    CheckFocus() {
+        if (this.Active && !GameWindow.IsActive())
+            this.Stop("Game window lost focus")
+    }
+
     ; --- loop ---------------------------------------------------------------
 
     Tick() {
+        this.CheckFocus()
         read := this.Reader.ReadOnce()
         state := this.Reader.Update(read.Speed, read.Raw)
 
@@ -158,6 +166,7 @@ class CruiseEngine {
 
     ; Pulse-width modulation: holds throttle for duty% of each PWM cycle.
     Pwm() {
+        this.CheckFocus()
         if (!this.Active || this.Debug)
             return
         if (this.Ctrl.BrakeDuty > 0) {
