@@ -33,14 +33,26 @@ class CruiseEngine {
     ; Re-reads all tuning from Config and applies live changes.
     Reload() {
         this.Ctrl.LoadConfig()
+        this.ApplyTickInterval()
         if !this.Active
             this.Target := this.ClampTarget(Config.GetInt("General", "StartTarget"))
     }
 
     ; --- timers -------------------------------------------------------------
 
+    ; Update interval, clamped so 0 (which would stop the timer) can't sneak in.
+    TickInterval() {
+        return Max(30, Config.GetInt("General", "UpdateInterval"))
+    }
+
+    ; Applies the configured tick interval to the running timer. Called at
+    ; startup and again on every reload so the setting takes effect live.
+    ApplyTickInterval() {
+        SetTimer(this.TickFn, this.TickInterval())
+    }
+
     StartTimers() {
-        SetTimer(this.TickFn, Config.GetInt("General", "UpdateInterval"))
+        this.ApplyTickInterval()
         SetTimer(this.PwmFn, 20)
     }
 
