@@ -82,8 +82,13 @@ class Controller {
 
         if (this.BrakeDuty = 0) {
             wayOver := over >= this.BrakeHardGap
-            gainingOnHill := over >= this.BrakeSoftGap && accelEst >= this.BrakeAccelThreshold
-            if ((wayOver || gainingOnHill) && speedEst > this.MinBrakeSpeed && held > this.MinBrakeHold) {
+            overSoft := over >= this.BrakeSoftGap
+            gaining := accelEst >= this.BrakeAccelThreshold
+            ; Engage the brake once we are clearly over (soft gap), if we are
+            ; still gaining speed past the target, or if we are well over. The
+            ; hard gap is the one case that also brakes below the minimum speed.
+            wantBrake := overSoft || (over > 0 && gaining)
+            if (wantBrake && (speedEst > this.MinBrakeSpeed || wayOver) && held > this.MinBrakeHold) {
                 this.BrakeDuty := 1
                 this.BrakeChangeTick := A_TickCount
             }
@@ -100,8 +105,8 @@ class Controller {
             this.Duty := 0                       ; braking: no throttle
         } else if (err >= this.FullThrottleGap) {
             this.Duty := 1                       ; far below: just hold throttle
-        } else if (err <= -3) {
-            this.Duty := 0                       ; slightly over: just coast
+        } else if (err <= 0) {
+            this.Duty := 0                       ; at or over target: just coast
         } else {
             this.Duty := Min(1, Max(0, this.Integral + this.Kp * err - this.Kd * accelEst))
         }
