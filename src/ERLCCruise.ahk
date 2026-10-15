@@ -55,6 +55,17 @@ Persistent
 class Hotkeys {
     static Keys := ["Region", "Settings", "ToggleHud", "Toggle", "IncrementUp", "IncrementDown", "Debug", "Cancel", "CancelAccelerate"]
     static Registered := []
+    static IfGame := ""
+
+    ; The single HotIf criteria object every hotkey is scoped to. Stored and
+    ; reused (rather than recreated) because AHK keys hotkey variants on the
+    ; exact callback object: a fresh closure would not match - and so could not
+    ; disable - the variants created under an earlier one.
+    static Criteria() {
+        if (this.IfGame = "")
+            this.IfGame := (*) => GameWindow.IsActive()
+        return this.IfGame
+    }
 
     ; Clears previous registrations and re-registers everything from Config.
     static Register() {
@@ -70,16 +81,15 @@ class Hotkeys {
             "CancelAccelerate", (*) => gEngine.OnThrottlePressed()
         )
 
-        ; Turn off every combo we previously registered, so a rebind (or a
-        ; cleared field) never leaves a stale hotkey active.
-        HotIf()
+        ; Scope every hotkey to the game window, and turn off the previous
+        ; registrations under that same criteria, so a rebind (or a cleared
+        ; field) never leaves a stale hotkey active.
+        HotIf(this.Criteria())
         for prev in this.Registered {
             try Hotkey prev, "Off"
         }
         this.Registered := []
 
-        ; Scope every hotkey to the game window.
-        HotIf((*) => GameWindow.IsActive())
         for name in this.Keys
             this.RegisterOne(name, Handlers[name])
 
